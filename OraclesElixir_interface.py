@@ -291,7 +291,22 @@ if st.button("Predict Match Outcome", type="primary", use_container_width=True):
 
             # 3. Render results cleanly on mobile & desktop
             st.success("Prediction Complete!")
-            st.metric(label="Match Result", value=str(prediction))
+            
+            # Safely unpack model probabilities
+            try:
+                blue_prob = float(prediction[0])
+                red_prob = float(prediction[1])
+            except (TypeError, IndexError):
+                blue_prob = float(prediction)
+                red_prob = 1.0 - blue_prob
+
+            # Model Win Probability as 2-decimal percentages
+            st.subheader("🎯 Model Win Probability")
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                st.metric(label=f"{blue_team} (Blue)", value=f"{blue_prob * 100:.2f}%")
+            with col_p2:
+                st.metric(label=f"{red_team} (Red)", value=f"{red_prob * 100:.2f}%")
 
             st.divider()
             st.subheader("📊 Mastery & Draft Breakdown")
@@ -302,15 +317,18 @@ if st.button("Predict Match Outcome", type="primary", use_container_width=True):
 
             col1, col2 = st.columns(2)
             with col1:
-                st.metric(label=f"{blue_team} (Blue)", value=f"{team_a_total_draft / 5:.3f}")
+                # Draft score as real number to 4 decimals
+                st.metric(label=f"{blue_team} (Blue)", value=f"{(team_a_total_draft / 5):.4f}")
             with col2:
-                st.metric(label=f"{red_team} (Red)", value=f"{team_b_total_draft / 5:.3f}")
+                # Draft score as real number to 4 decimals
+                st.metric(label=f"{red_team} (Red)", value=f"{(team_b_total_draft / 5):.4f}")
 
+            # Draft score difference as a real number to 4 decimals
             diff = (team_a_total_draft - team_b_total_draft) / 5
             st.metric(
                 label="Draft Score Diff (Blue - Red)",
-                value=f"{diff:+.3f}",
-                delta=f"{diff:+.3f}",
+                value=f"{diff:+.4f}",
+                delta=f"{diff:+.4f}",
             )
             
         except Exception as e:
